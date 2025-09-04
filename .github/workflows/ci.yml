@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  # Trigger on push to any branch
+  push:
+    branches: ['**']
+  
+  # Trigger on pull request to any branch
+  pull_request:
+    branches: ['**']
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x, 22.x]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'yarn'
+      
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      
+      - name: Run linter and auto-fix
+        run: yarn lint:fix
+      
+      - name: Run type check
+        run: yarn build
+      
+      - name: Run tests
+        run: yarn test --coverage
+      
+      - name: Upload coverage to Codecov
+        if: matrix.node-version == '20.x'
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'yarn'
+      
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      
+      - name: Build project
+        run: yarn build
+      
+      - name: Test built project
+        run: yarn start

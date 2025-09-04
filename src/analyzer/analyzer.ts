@@ -1,4 +1,4 @@
-import { CstNode, CstElement, IToken } from 'chevrotain';
+import { CstNode } from 'chevrotain';
 import {
   Program,
   ParsedLine,
@@ -17,7 +17,6 @@ import {
 } from '../types';
 import { parser } from '../parser/parser';
 import { tokenize, TokenizeResult } from '../lexer/lexer';
-import { LinePreprocessResult } from '../lexer/tokens';
 
 export class DayPlanAnalyzer {
   private context: AnalysisContext;
@@ -72,7 +71,7 @@ export class DayPlanAnalyzer {
   private parseLinesToRaw(
     lines: string[], 
     tokenizeResult: TokenizeResult, 
-    cst: CstNode
+    _cst: CstNode
   ): ParsedLineRaw[] {
     const rawLines: ParsedLineRaw[] = [];
     
@@ -475,7 +474,6 @@ export class DayPlanAnalyzer {
   private parseTime(timeStr: string, lineNo: number): { value?: Date; error?: Diagnostic } {
     try {
       // Simple time parsing - would be more robust in production
-      const now = new Date();
       let hours = 0;
       let minutes = 0;
       
