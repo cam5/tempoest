@@ -5,9 +5,9 @@
  */
 
 import { parseAndAnalyze } from '../index';
-import { ParsedLine, TaskNode, Diagnostic, Program } from '../types';
+import { TaskNode, Program } from '../types';
 import { executeTimeShift, executeBatchTimeShift } from './commands/time-shift';
-import { parseTimeOffset, validateTimeOffset, type TimeOffset } from './time-utils';
+import { parseTimeOffset, validateTimeOffset } from './time-utils';
 
 export interface TempoestLanguageService {
   // Document analysis
@@ -67,7 +67,7 @@ export interface CodeAction {
   title: string;
   kind: 'quickfix' | 'refactor';
   edit?: TextEdit;
-  command?: { id: string; args: any[] };
+        command?: { id: string; args: unknown[] };
 }
 
 export interface TextEdit {
@@ -212,7 +212,7 @@ class TempoestLanguageServiceImpl implements TempoestLanguageService {
     return completions;
   }
   
-  getHover(content: string, lineNumber: number, column: number): HoverInfo | null {
+  getHover(content: string, lineNumber: number, _column: number): HoverInfo | null {
     const program = this.analyzeDocument(content);
     const line = program.lines[lineNumber - 1];
     

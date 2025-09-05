@@ -1,4 +1,4 @@
-import { allTokens } from '../lexer/tokens';
+// Note: Token definitions are used directly rather than importing allTokens array
 
 export interface MonarchLanguageDefinition {
   keywords: string[];

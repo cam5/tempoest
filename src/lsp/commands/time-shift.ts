@@ -4,7 +4,7 @@
 
 import { ParsedLine, TaskNode } from '../../types';
 import { parseTimeOffset, applyTimeOffsetToTimeString, validateTimeOffset } from '../time-utils';
-import { findTimeTokenInLine, parseTimeString, validateTaskLineFormat } from '../parser-utils';
+import { findTimeTokenInLine, validateTaskLineFormat } from '../parser-utils';
 
 export interface TimeShiftCommand {
   type: 'shift-time';

@@ -21,4 +21,10 @@ module.exports = {
     node: true,
     es2022: true,
   },
+  ignorePatterns: [
+    'dist/',
+    'node_modules/',
+    '**/*.test.ts',
+    '**/__tests__/**/*',
+  ],
 };

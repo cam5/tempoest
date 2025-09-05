@@ -2,7 +2,7 @@
  * Utilities that leverage existing parser/analyzer logic to avoid duplication
  */
 
-import { DayPlanAnalyzer } from '../analyzer/analyzer';
+// Note: We reuse the parsing logic from analyzer without importing the class
 import { tokenize } from '../lexer/lexer';
 import { TimeClock, TimeWord, Duration } from '../lexer/tokens';
 
