@@ -29,6 +29,15 @@ export {
   type TimeShiftResult as TimeUtilsResult
 } from './time-utils';
 
+// Parser utilities (DRY helpers that reuse existing Chevrotain logic)
+export {
+  findTimeTokenInLine,
+  findDurationTokenInLine,
+  parseTimeString,
+  parseDurationString,
+  validateTaskLineFormat
+} from './parser-utils';
+
 // Commands (for advanced use cases)
 export {
   executeTimeShift,

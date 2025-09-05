@@ -4,6 +4,7 @@
 
 import { ParsedLine, TaskNode } from '../../types';
 import { parseTimeOffset, applyTimeOffsetToTimeString, validateTimeOffset } from '../time-utils';
+import { findTimeTokenInLine, parseTimeString, validateTaskLineFormat } from '../parser-utils';
 
 export interface TimeShiftCommand {
   type: 'shift-time';
@@ -40,6 +41,15 @@ export function executeTimeShift(
     };
   }
   
+  // Additional validation using parser utilities to ensure line format is correct
+  const lineValidation = validateTaskLineFormat(line.raw);
+  if (!lineValidation.valid) {
+    return {
+      success: false,
+      error: 'Invalid task line format - missing dash or malformed syntax'
+    };
+  }
+  
   const task = line.node as TaskNode;
   
   // Find the time part in the original line to replace
@@ -69,8 +79,8 @@ function shiftTaskTime(rawLine: string, task: TaskNode, offset: string): TimeShi
   
   // If task has explicit start time, find and replace it in the raw line
   if (task.explicitStart && task.start) {
-    const timePattern = findTimeInLine(rawLine);
-    if (!timePattern) {
+    const timeToken = findTimeTokenInLine(rawLine);
+    if (!timeToken) {
       return { 
         success: false, 
         error: 'Could not locate time in line to modify' 
@@ -78,15 +88,15 @@ function shiftTaskTime(rawLine: string, task: TaskNode, offset: string): TimeShi
     }
     
     // Apply offset to the found time string
-    const shiftResult = applyTimeOffsetToTimeString(timePattern.timeStr, parsedOffset);
+    const shiftResult = applyTimeOffsetToTimeString(timeToken.timeStr, parsedOffset);
     if (!shiftResult.success) {
       return { success: false, error: shiftResult.error };
     }
     
     // Replace the time in the original line
-    const newLine = rawLine.substring(0, timePattern.start) + 
+    const newLine = rawLine.substring(0, timeToken.start) + 
                    shiftResult.newTime + 
-                   rawLine.substring(timePattern.end);
+                   rawLine.substring(timeToken.end);
     
     return { success: true, newLineContent: newLine };
   }
@@ -119,39 +129,22 @@ function shiftTaskTime(rawLine: string, task: TaskNode, offset: string): TimeShi
   };
 }
 
-/**
- * Find time pattern in a line and return its position
- */
-function findTimeInLine(line: string): { timeStr: string; start: number; end: number } | null {
-  // Common time patterns
-  const patterns = [
-    /\b(\d{1,2}(?::\d{2})?(?:am|pm))\b/i,  // 9am, 9:30pm
-    /\b(\d{1,2}:\d{2})\b/,                  // 14:30, 9:15
-    /\b(noon|midnight)\b/i                   // noon, midnight
-  ];
-  
-  for (const pattern of patterns) {
-    const match = pattern.exec(line);
-    if (match) {
-      return {
-        timeStr: match[1],
-        start: match.index!,
-        end: match.index! + match[1].length
-      };
-    }
-  }
-  
-  return null;
-}
+// Note: findTimeInLine function removed - now using findTimeTokenInLine from parser-utils
+// This eliminates code duplication and ensures we use the same lexer logic
 
 /**
  * Format a Date object as a time string for insertion into a line
+ * Uses the same format style as the existing time parsing logic
  */
 function formatTimeForInsertion(date: Date): string {
   const hours = date.getHours();
   const minutes = date.getMinutes();
   
-  // Use 12-hour format for readability
+  // Handle special cases that match our TimeWord tokens
+  if (hours === 12 && minutes === 0) return 'noon';
+  if (hours === 0 && minutes === 0) return 'midnight';
+  
+  // Use 12-hour format for readability (matches TimeClock token expectations)
   let displayHours = hours;
   const ampm = hours >= 12 ? 'pm' : 'am';
   
