@@ -46,7 +46,8 @@
   "homepage": "https://github.com/cam5/tempoest#readme",
   "devDependencies": {
     "@types/jest": "^29.0.0",
-    "@types/node": "^20.10.0",
+    "@types/node": "^20.19.13",
+    "@types/vscode": "^1.103.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "eslint": "^8.0.0",

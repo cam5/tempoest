@@ -21,6 +21,9 @@ export * from './parser/parser';
 export * from './analyzer/analyzer';
 export * from './monarch/monarch-generator';
 
+// Export LSP functionality
+export * from './lsp';
+
 // Example usage and testing
 if (require.main === module) {
   console.log('Tempoest - Day Planning DSL Parser');
