@@ -11,6 +11,7 @@ A TypeScript project implementing a Chevrotain-based parser and analyzer for a d
 - **Category Support**: Hierarchical categorization with `:root::sub::leaf` syntax
 - **Tolerant Parsing**: Continues parsing despite minor formatting issues
 - **TypeScript**: Full type safety with exhaustive diagnostic code checking
+- **Monaco Editor Integration**: Export Monarch syntax definitions for Monaco Editor syntax highlighting
 
 ## DSL Syntax
 
@@ -236,6 +237,41 @@ Output:
 }
 ```
 
+## Monaco Editor Integration
+
+Tempoest can generate Monarch syntax definitions for Monaco Editor integration:
+
+```typescript
+import { generateMonarchExport } from 'tempoest';
+
+// Generate Monarch language definition and theme
+const { language, theme } = generateMonarchExport({
+  includeTheme: true,
+  themeName: 'light'  // or 'dark'
+});
+
+// Register with Monaco Editor
+monaco.languages.register({ id: 'dayplan' });
+monaco.languages.setMonarchTokensProvider('dayplan', language);
+monaco.editor.defineTheme('dayplan-theme', theme);
+
+// Use in your editor
+monaco.editor.create(document.getElementById('container'), {
+  value: '- 9am, Task, 30m, :work',
+  language: 'dayplan',
+  theme: 'dayplan-theme'
+});
+```
+
+For JSON export (useful for non-TypeScript projects):
+
+```typescript
+import { generateSerializableMonarchExport } from 'tempoest';
+
+const monarchDefinition = generateSerializableMonarchExport();
+// Save to file or use directly
+```
+
 ## Testing
 
 The project includes comprehensive tests covering:
@@ -244,6 +280,7 @@ The project includes comprehensive tests covering:
 - **Parser**: Grammar parsing and CST generation  
 - **Analyzer**: Time inference, validation, and diagnostics
 - **Integration**: End-to-end scenarios and edge cases
+- **Monarch**: Syntax highlighting definition generation
 
 Run tests with:
 ```bash

@@ -19,6 +19,7 @@ export * from './lexer/tokens';
 export * from './lexer/lexer';
 export * from './parser/parser';
 export * from './analyzer/analyzer';
+export * from './monarch/monarch-generator';
 
 // Example usage and testing
 if (require.main === module) {

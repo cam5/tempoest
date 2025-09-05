@@ -1,27 +1,49 @@
 {
   "name": "tempoest",
   "version": "1.0.0",
-  "description": "A TypeScript project with Chevrotain for custom grammar parsing",
+  "description": "A TypeScript DSL parser for day planning and time management",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "ts-node src/index.ts",
     "watch": "tsc --watch",
+    "dev:watch": "tsc --watch --preserveWatchOutput",
     "start": "node dist/index.js",
     "clean": "rm -rf dist",
     "test": "jest",
     "test:watch": "jest --watch",
     "lint": "eslint src --ext .ts",
-    "lint:fix": "eslint src --ext .ts --fix"
+    "lint:fix": "eslint src --ext .ts --fix",
+    "prepublishOnly": "npm run clean && npm run build && npm test",
+    "prepack": "npm run build"
   },
   "keywords": [
-    "chevrotain",
+    "dsl",
+    "day-planning",
+    "time-management",
     "parser",
+    "chevrotain",
     "grammar",
-    "typescript"
+    "typescript",
+    "schedule",
+    "calendar"
   ],
-  "author": "",
+  "author": "Cameron",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cam5/tempoest.git"
+  },
+  "bugs": {
+    "url": "https://github.com/cam5/tempoest/issues"
+  },
+  "homepage": "https://github.com/cam5/tempoest#readme",
   "devDependencies": {
     "@types/jest": "^29.0.0",
     "@types/node": "^20.10.0",
