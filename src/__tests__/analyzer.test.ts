@@ -230,6 +230,214 @@ describe('Day Plan Analyzer', () => {
     });
   });
   
+  describe('section directives', () => {
+    test('should handle scratchpad directive and skip task parsing', () => {
+      const source = `- 9am First task, 30m
+- !scratchpad
+- whatever notes here, 45m
+- more notes :category
+- !planner
+- 10am Second task, 15m`;
+      
+      const result = parseAndAnalyze(source);
+      
+      expect(result.lines).toHaveLength(6);
+      
+      // First task should be parsed normally
+      const firstTask = result.lines[0].node as any;
+      expect(firstTask.kind).toBe('task');
+      expect(firstTask.title).toBe('First task');
+      expect(firstTask.durationMin).toBe(30);
+      
+      // Scratchpad directive
+      const scratchpadDirective = result.lines[1].node as any;
+      expect(scratchpadDirective.kind).toBe('directive');
+      expect(scratchpadDirective.name).toBe('scratchpad');
+      
+      // Lines in scratchpad should not be parsed as tasks
+      expect(result.lines[2].node).toBeNull();
+      expect(result.lines[2].status).toBe('valid');
+      expect(result.lines[3].node).toBeNull();
+      expect(result.lines[3].status).toBe('valid');
+      
+      // Planner directive
+      const plannerDirective = result.lines[4].node as any;
+      expect(plannerDirective.kind).toBe('directive');
+      expect(plannerDirective.name).toBe('planner');
+      
+      // Second task should be parsed normally after planner directive
+      const secondTask = result.lines[5].node as any;
+      expect(secondTask.kind).toBe('task');
+      expect(secondTask.title).toBe('Second task');
+      expect(secondTask.durationMin).toBe(15);
+    });
+    
+    test('should default to planner section', () => {
+      const source = `- 9am Task A, 30m
+- Task B, 45m`;
+      
+      const result = parseAndAnalyze(source);
+      
+      // Both tasks should be parsed normally (default planner section)
+      expect(result.lines[0].node?.kind).toBe('task');
+      expect(result.lines[1].node?.kind).toBe('task');
+    });
+    
+    test('should handle multiple section switches', () => {
+      const source = `- 9am Task A
+- !scratchpad
+- note 1
+- !planner
+- Task B
+- !scratchpad
+- note 2
+- !planner
+- Task C`;
+      
+      const result = parseAndAnalyze(source);
+      
+      expect(result.lines).toHaveLength(9);
+      
+      // Task A (planner)
+      expect(result.lines[0].node?.kind).toBe('task');
+      
+      // Scratchpad directive
+      expect((result.lines[1].node as any)?.name).toBe('scratchpad');
+      
+      // Note 1 (scratchpad - not parsed as task)
+      expect(result.lines[2].node).toBeNull();
+      
+      // Planner directive
+      expect((result.lines[3].node as any)?.name).toBe('planner');
+      
+      // Task B (planner)
+      expect(result.lines[4].node?.kind).toBe('task');
+      
+      // Scratchpad directive
+      expect((result.lines[5].node as any)?.name).toBe('scratchpad');
+      
+      // Note 2 (scratchpad - not parsed as task)
+      expect(result.lines[6].node).toBeNull();
+      
+      // Planner directive
+      expect((result.lines[7].node as any)?.name).toBe('planner');
+      
+      // Task C (planner)
+      expect(result.lines[8].node?.kind).toBe('task');
+    });
+    
+    test('should handle scratchpad with time-like content', () => {
+      const source = `- 9am Real task, 30m
+- !scratchpad
+- 10am fake task, 45m :work
+- another note with 1h duration
+- !planner
+- 11am Second task, 15m`;
+      
+      const result = parseAndAnalyze(source);
+      
+      // Real task should be parsed
+      const realTask1 = result.lines[0].node as any;
+      expect(realTask1.kind).toBe('task');
+      expect(realTask1.title).toBe('Real task');
+      
+      // Scratchpad lines should not be parsed as tasks even with time-like content
+      expect(result.lines[2].node).toBeNull();
+      expect(result.lines[3].node).toBeNull();
+      
+      // Second task should be parsed after returning to planner
+      const secondTask = result.lines[5].node as any;
+      expect(secondTask.kind).toBe('task');
+      expect(secondTask.title).toBe('Second task');
+    });
+    
+    test('should handle empty scratchpad sections', () => {
+      const source = `- 9am Task A
+- !scratchpad
+- !planner
+- Task B`;
+      
+      const result = parseAndAnalyze(source);
+      
+      expect(result.lines).toHaveLength(4);
+      expect(result.lines[0].node?.kind).toBe('task');
+      expect((result.lines[1].node as any)?.name).toBe('scratchpad');
+      expect((result.lines[2].node as any)?.name).toBe('planner');
+      expect(result.lines[3].node?.kind).toBe('task');
+    });
+    
+    test('should handle comments and blank lines in scratchpad', () => {
+      const source = `- 9am Task A
+- !scratchpad
+# This is a comment in scratchpad
+- some task-like content
+
+- more content
+- !planner
+- Task B`;
+      
+      const result = parseAndAnalyze(source);
+      
+      expect(result.lines).toHaveLength(8);
+      
+      // Task A
+      expect(result.lines[0].node?.kind).toBe('task');
+      
+      // Scratchpad directive
+      expect((result.lines[1].node as any)?.name).toBe('scratchpad');
+      
+      // Comment line (should be valid)
+      expect(result.lines[2].node).toBeNull();
+      expect(result.lines[2].status).toBe('valid');
+      
+      // Scratchpad content (should not be parsed as task)
+      expect(result.lines[3].node).toBeNull();
+      expect(result.lines[3].status).toBe('valid');
+      
+      // Blank line
+      expect(result.lines[4].node).toBeNull();
+      expect(result.lines[4].status).toBe('valid');
+      
+      // More scratchpad content
+      expect(result.lines[5].node).toBeNull();
+      expect(result.lines[5].status).toBe('valid');
+      
+      // Planner directive
+      expect((result.lines[6].node as any)?.name).toBe('planner');
+      
+      // Task B
+      expect(result.lines[7].node?.kind).toBe('task');
+    });
+    
+    test('should handle bare directive format (without dash)', () => {
+      const source = `- 9am Task A, 30m
+!scratchpad
+- scratchpad content here
+!planner
+- Task B, 15m`;
+      
+      const result = parseAndAnalyze(source);
+      
+      expect(result.lines).toHaveLength(5);
+      
+      // Task A
+      expect(result.lines[0].node?.kind).toBe('task');
+      
+      // Scratchpad directive (bare format)
+      expect((result.lines[1].node as any)?.name).toBe('scratchpad');
+      
+      // Scratchpad content should not be parsed as task
+      expect(result.lines[2].node).toBeNull();
+      expect(result.lines[2].status).toBe('valid');
+      
+      // Planner directive (bare format)
+      expect((result.lines[3].node as any)?.name).toBe('planner');
+      
+      // Task B
+      expect(result.lines[4].node?.kind).toBe('task');
+    });
+  });
+  
   describe('time parsing', () => {
     test('should parse various time formats', () => {
       const timeFormats = [

@@ -39,6 +39,7 @@ export class MonarchGenerator {
       // Keywords for directives and time words
       keywords: [
         'default', 'policy', 'day', 'tz',  // directive names
+        'scratchpad', 'planner',           // section directives
         'noon', 'midnight',               // time words
         'warning', 'error', 'ignore',     // policy values
       ],
@@ -62,6 +63,8 @@ export class MonarchGenerator {
 
           // Line starters
           [/^(\s*)-/, { token: 'keyword.task-marker', next: '@task_line' }],
+          [/^(\s*)!scratchpad\b/, { token: 'keyword.section-directive', next: '@pop' }],
+          [/^(\s*)!planner\b/, { token: 'keyword.section-directive', next: '@pop' }],
           [/^(\s*)!/, { token: 'keyword.directive-marker', next: '@directive_line' }],
 
           // Fallback for any other content
@@ -104,7 +107,7 @@ export class MonarchGenerator {
           [/\/\/.*$/, { token: 'comment', next: '@pop' }],
 
           // Directive names
-          [/\b(?:default|policy|day|tz)\b/, 'keyword.directive-name'],
+          [/\b(?:default|policy|day|tz|scratchpad|planner)\b/, 'keyword.directive-name'],
 
           // Directive arguments
           [/=/, 'operator'],
@@ -147,6 +150,7 @@ export class MonarchGenerator {
         // Task and directive markers
         { token: 'keyword.task-marker', foreground: '0066CC', fontStyle: 'bold' },
         { token: 'keyword.directive-marker', foreground: 'CC6600', fontStyle: 'bold' },
+        { token: 'keyword.section-directive', foreground: 'AA00AA', fontStyle: 'bold' },
 
         // Time and duration
         { token: 'constant.time', foreground: '0066CC' },
@@ -189,6 +193,7 @@ export class MonarchGenerator {
         // Task and directive markers
         { token: 'keyword.task-marker', foreground: '4FC3F7', fontStyle: 'bold' },
         { token: 'keyword.directive-marker', foreground: 'FFB74D', fontStyle: 'bold' },
+        { token: 'keyword.section-directive', foreground: 'CE93D8', fontStyle: 'bold' },
 
         // Time and duration
         { token: 'constant.time', foreground: '4FC3F7' },

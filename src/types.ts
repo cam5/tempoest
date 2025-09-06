@@ -25,7 +25,7 @@ export interface TaskNode {
 
 export interface DirectiveNode {
   kind: "directive";
-  name: "default" | "policy" | "day" | "tz";
+  name: "default" | "policy" | "day" | "tz" | "scratchpad" | "planner";
   args: Record<string, string>;
 }
 
@@ -94,6 +94,7 @@ export interface ParsedLineRaw {
   hasSpaceAfterDash: boolean;
   isBlank: boolean;
   isComment: boolean;
+  isScratchpad?: boolean;  // true if line is in scratchpad section
   task?: RawTaskParts;
   directive?: RawDirectiveParts;
 }

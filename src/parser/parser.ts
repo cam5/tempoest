@@ -15,6 +15,8 @@ import {
   CategoryDouble,
   Identifier,
   Text,
+  ScratchpadDirective,
+  PlannerDirective,
 } from '../lexer/tokens';
 
 export class DayPlanParser extends CstParser {
@@ -74,13 +76,29 @@ export class DayPlanParser extends CstParser {
     });
   });
 
-  // Directive: !name key=value key=value
+  // Directive: !name key=value key=value or !scratchpad or !planner
   directive = this.RULE('directive', () => {
     this.CONSUME(Bang);
-    this.CONSUME(Identifier);
-    this.MANY(() => {
-      this.SUBRULE(this.keyValue);
-    });
+    this.OR([
+      {
+        ALT: () => {
+          this.CONSUME(ScratchpadDirective);
+        },
+      },
+      {
+        ALT: () => {
+          this.CONSUME(PlannerDirective);
+        },
+      },
+      {
+        ALT: () => {
+          this.CONSUME(Identifier);
+          this.MANY(() => {
+            this.SUBRULE(this.keyValue);
+          });
+        },
+      },
+    ]);
   });
 
   // Key=value pairs

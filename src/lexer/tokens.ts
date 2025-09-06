@@ -81,6 +81,19 @@ export const Identifier = createToken({
   pattern: /[A-Za-z0-9_-]+/,
 });
 
+// Section directive keywords (must come before Identifier in allTokens)
+export const ScratchpadDirective = createToken({
+  name: 'ScratchpadDirective',
+  pattern: /scratchpad/,
+  longer_alt: Identifier,
+});
+
+export const PlannerDirective = createToken({
+  name: 'PlannerDirective',
+  pattern: /planner/,
+  longer_alt: Identifier,
+});
+
 // Generic text for title parts and other content
 export const Text = createToken({
   name: 'Text',
@@ -110,6 +123,10 @@ export const allTokens = [
   TimeWord,
   Duration,
   TimeClock,
+  
+  // Section directives (before Identifier to match first)
+  ScratchpadDirective,
+  PlannerDirective,
   
   // Identifiers and text
   Identifier,

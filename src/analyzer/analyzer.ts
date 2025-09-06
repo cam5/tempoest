@@ -22,6 +22,7 @@ export class DayPlanAnalyzer {
   private context: AnalysisContext;
   private cursorTime: Date | null = null;
   private tasks: TaskNode[] = []; // For overlap detection
+  private currentSection: 'planner' | 'scratchpad' = 'planner'; // Default to planner
 
   constructor(options: ParseOptions = {}) {
     const today = options.today || new Date().toISOString().split('T')[0];
@@ -89,15 +90,27 @@ export class DayPlanAnalyzer {
       };
       
       // Parse the line content if it's not blank or comment-only
-      if (!rawLine.isBlank && !rawLine.isComment && line.trim().startsWith('-')) {
+      if (!rawLine.isBlank && !rawLine.isComment && (line.trim().startsWith('-') || line.trim().startsWith('!'))) {
         try {
-          const lineContent = this.parseLineContent(line, lineNo);
-          if (lineContent.task) {
-            rawLine.task = lineContent.task;
-          }
+          const lineContent = this.parseLineContent(line, lineNo, this.currentSection);
+          
+          // Apply directive immediately to update current section
           if (lineContent.directive) {
             rawLine.directive = lineContent.directive;
+            // Apply directive to update section state
+            if (lineContent.directive.name === 'scratchpad' || lineContent.directive.name === 'planner') {
+              this.applyDirective(lineContent.directive);
+            }
           }
+          
+          // Handle parsed content
+          if (lineContent.task) {
+            rawLine.task = lineContent.task;
+          } else if (!lineContent.directive && this.currentSection === 'scratchpad') {
+            // Mark non-directive content in scratchpad as scratchpad
+            rawLine.isScratchpad = true;
+          }
+          
           rawLine.diagnostics.push(...lineContent.diagnostics);
         } catch (error) {
           rawLine.diagnostics.push({
@@ -114,7 +127,7 @@ export class DayPlanAnalyzer {
     return rawLines;
   }
 
-  private parseLineContent(line: string, lineNo: number): {
+  private parseLineContent(line: string, lineNo: number, currentSection: 'planner' | 'scratchpad' = 'planner'): {
     task?: RawTaskParts;
     directive?: RawDirectiveParts;
     diagnostics: Diagnostic[];
@@ -122,12 +135,19 @@ export class DayPlanAnalyzer {
     const diagnostics: Diagnostic[] = [];
     
     // Simple regex-based parsing for now (would be replaced with proper CST walking)
+    let content: string;
+    
+    // Handle both dash-prefixed and bare directive formats
     const dashMatch = line.match(/^\s*-\s*(.*)$/);
-    if (!dashMatch) {
+    const directiveMatch = line.match(/^\s*!(.*)$/);
+    
+    if (dashMatch) {
+      content = dashMatch[1];
+    } else if (directiveMatch) {
+      content = '!' + directiveMatch[1];
+    } else {
       return { diagnostics };
     }
-    
-    const content = dashMatch[1];
     
     // Check for directive
     if (content.startsWith('!')) {
@@ -136,7 +156,15 @@ export class DayPlanAnalyzer {
         const [, name, argsStr] = directiveMatch;
         const args: Record<string, string> = {};
         
-        // Parse key=value pairs and standalone values
+        // Handle section directives (scratchpad, planner)
+        if (name === 'scratchpad' || name === 'planner') {
+          return {
+            directive: { name, args: {} },
+            diagnostics,
+          };
+        }
+        
+        // Parse key=value pairs and standalone values for other directives
         if (argsStr.trim()) {
           const keyValueMatches = argsStr.matchAll(/(\w+)=([^\s,]+)/g);
           for (const match of keyValueMatches) {
@@ -155,6 +183,11 @@ export class DayPlanAnalyzer {
           diagnostics,
         };
       }
+    }
+    
+    // Don't parse as task if we're in scratchpad section
+    if (currentSection === 'scratchpad') {
+      return { diagnostics };
     }
     
     // Parse as task
@@ -338,6 +371,18 @@ export class DayPlanAnalyzer {
     
     if (rawLine.task) {
       return this.analyzeTask(rawLine, id);
+    }
+    
+    // Handle scratchpad lines - they're valid but not parsed as tasks
+    if (rawLine.isScratchpad) {
+      return {
+        id,
+        raw: rawLine.raw,
+        lineNo: rawLine.lineNo,
+        status: "valid",
+        diagnostics: rawLine.diagnostics,
+        node: null,
+      };
     }
     
     return {
@@ -562,6 +607,12 @@ export class DayPlanAnalyzer {
 
   private applyDirective(directive: RawDirectiveParts): void {
     switch (directive.name) {
+      case 'scratchpad':
+        this.currentSection = 'scratchpad';
+        break;
+      case 'planner':
+        this.currentSection = 'planner';
+        break;
       case 'default':
         if (directive.args.duration) {
           const parsed = this.parseDuration(directive.args.duration, 1);
