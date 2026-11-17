@@ -188,3 +188,16 @@ describe('Day Plan Integration Tests', () => {
     expect(nodes).toHaveLength(0);
   });
 });
+
+describe('comments', () => {
+  test('%% comments, whole-line and inline, and inline # comments, are not part of a task', () => {
+    const result = parseAndAnalyze(`%% a note to self
+- 9am, Standup, 15m %% moved from 9:30
+- Review PR #732 # waiting on CI
+- Pairing // with Ana`, { today: '2025-01-15', timezone: 'America/Toronto' });
+    const tasks = result.lines.filter((l) => l.node?.kind === 'task').map((l) => (l.node as any).title);
+    expect(tasks).toEqual(['Standup', 'Review PR #732', 'Pairing']);
+    expect(result.lines[0].node).toBeNull();
+    expect(result.lines.flatMap((l) => l.diagnostics)).toEqual([]);
+  });
+});

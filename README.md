@@ -65,8 +65,13 @@ Configure parsing behavior:
 ```
 # Hash comments
 // Slash comments
+%% Percent comments, as in Mermaid and Obsidian
 - Task name # inline comments
+- Task name %% also inline
 ```
+
+`%%` is the one to use when a plan lives inside Markdown, where a `# ` line is a heading.
+Inline, `#` starts a comment only when a space follows it, so `PR #732` stays in a title.
 
 ## API Usage
 

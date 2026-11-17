@@ -47,6 +47,12 @@ export const SlashComment = createToken({
   pattern: /\/\/[^\r\n]*/,
 });
 
+// %% comments, as in Mermaid and Obsidian: safe inside Markdown, where a "# " line is a heading
+export const PercentComment = createToken({
+  name: 'PercentComment',
+  pattern: /%%[^\r\n]*/,
+});
+
 // Time patterns (order matters - more specific first)
 export const TimeWord = createToken({
   name: 'TimeWord',
@@ -108,6 +114,7 @@ export const allTokens = [
   // Comments (before other patterns that might match)
   HashComment,
   SlashComment,
+  PercentComment,
   
   // Structural
   Dash,

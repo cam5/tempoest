@@ -8,6 +8,7 @@ import {
   EOL,
   HashComment,
   SlashComment,
+  PercentComment,
   TimeWord,
   TimeClock,
   Duration,
@@ -196,6 +197,9 @@ export class DayPlanParser extends CstParser {
       },
       {
         ALT: () => this.CONSUME(SlashComment),
+      },
+      {
+        ALT: () => this.CONSUME(PercentComment),
       },
     ]);
   });

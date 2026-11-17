@@ -57,6 +57,7 @@ export class MonarchGenerator {
           // Comments - handle first to avoid conflicts
           [/#.*$/, 'comment'],
           [/\/\/.*$/, 'comment'],
+          [/%%.*$/, 'comment'],
 
           // Whitespace
           [/\s+/, ''],
@@ -75,6 +76,7 @@ export class MonarchGenerator {
           // Comments can appear anywhere in task lines
           [/#.*$/, { token: 'comment', next: '@pop' }],
           [/\/\/.*$/, { token: 'comment', next: '@pop' }],
+          [/%%.*$/, { token: 'comment', next: '@pop' }],
 
           // Time patterns (order matters - most specific first)
           [/\b(?:noon|midnight)\b/i, 'constant.time-word'],
@@ -105,6 +107,7 @@ export class MonarchGenerator {
           // Comments
           [/#.*$/, { token: 'comment', next: '@pop' }],
           [/\/\/.*$/, { token: 'comment', next: '@pop' }],
+          [/%%.*$/, { token: 'comment', next: '@pop' }],
 
           // Directive names
           [/\b(?:default|policy|day|tz|scratchpad|planner)\b/, 'keyword.directive-name'],

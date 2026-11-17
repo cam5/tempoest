@@ -86,7 +86,7 @@ export class DayPlanAnalyzer {
         diagnostics: [...preprocessResult.diagnostics],
         hasSpaceAfterDash: preprocessResult.hasSpaceAfterDash,
         isBlank: line.trim() === '',
-        isComment: /^\s*(#|\/\/)/.test(line),
+        isComment: /^\s*(#|\/\/|%%)/.test(line),
       };
       
       // Parse the line content if it's not blank or comment-only
@@ -148,6 +148,10 @@ export class DayPlanAnalyzer {
     } else {
       return { diagnostics };
     }
+
+    // An inline comment is not part of the line: %% or // anywhere, or # followed by a
+    // space (so "PR #732" stays in a title)
+    content = stripInlineComment(content);
     
     // Check for directive
     if (content.startsWith('!')) {
@@ -673,4 +677,9 @@ export class DayPlanAnalyzer {
     }, 0);
     return `line_${index}_${Math.abs(hash).toString(16)}`;
   }
+}
+
+/** A line without its inline comment: from %%, //, or a # followed by whitespace (or ending the line). */
+export function stripInlineComment(content: string): string {
+  return content.replace(/(?:^|\s)(?:%%|\/\/|#(?=\s|$)).*$/, '').trimEnd();
 }
